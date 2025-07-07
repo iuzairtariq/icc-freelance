@@ -143,7 +143,7 @@ const Payment = () => {
                                                 // non-digits hata do
                                                 e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '')
                                             }}
-                                            className={`w-full rounded-lg pl-12 py-3 text-sm ${errors.cardNumber ? 'border-red-500 focus:outline-red-500'
+                                            className={`w-full rounded-lg pl-12 py-3 text-sm ${errors.cardNumber ? 'border border-red-500 focus:outline-red-500'
                                                 : 'border border-gray-400 focus:outline-blue-500'
                                                 }`}
                                         />
@@ -170,7 +170,9 @@ const Payment = () => {
                                                 if (v.length > 2) v = v.slice(0, 2) + ' / ' + v.slice(2, 4)
                                                 e.currentTarget.value = v
                                             }}
-                                            className="w-full border border-gray-400 rounded-lg px-4 py-3 text-sm focus:outline-red-500"
+                                            className={`w-full rounded-lg px-4 py-3 text-sm ${errors.expiry ? 'border border-red-500 focus:outline-red-500'
+                                                : 'border border-gray-400 focus:outline-blue-500'
+                                                }`}
                                         />
                                         {errors.expiry && <p className="text-start mt-1 text-sm text-red-500">{errors.expiry.message}</p>}
                                     </div>
@@ -186,7 +188,9 @@ const Payment = () => {
                                             onInput={e => {
                                                 e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '')
                                             }}
-                                            className="w-full border border-gray-400 rounded-lg px-4 py-3 text-sm focus:outline-red-500"
+                                            className={`w-full rounded-lg px-4 py-3 text-sm ${errors.securityCode ? 'border border-red-500 focus:outline-red-500'
+                                                : 'border border-gray-400 focus:outline-blue-500'
+                                                }`}
                                         />
                                         {errors.securityCode && (
                                             <p className="text-start mt-1 text-sm text-red-500">{errors.securityCode.message}</p>
@@ -201,7 +205,9 @@ const Payment = () => {
                                         {...register('cardholderName',)}
                                         placeholder="As written on card"
                                         minLength={3}
-                                        className="w-full border border-gray-400 rounded-lg px-4 py-3 text-sm focus:outline-red-500"
+                                        className={`w-full rounded-lg px-4 py-3 text-sm ${errors.cardholderName ? 'border border-red-500 focus:outline-red-500'
+                                            : 'border border-gray-400 focus:outline-blue-500'
+                                            }`}
                                     />
                                     {errors.cardholderName && (
                                         <p className="text-start mt-1 text-sm text-red-500">{errors.cardholderName.message}</p>
@@ -223,7 +229,9 @@ const Payment = () => {
                                             // sirf letters aur spaces
                                             e.currentTarget.value = e.currentTarget.value.replace(/[^A-Za-z\s]/g, '')
                                         }}
-                                        className="w-full border border-gray-400 rounded-lg px-4 py-3 text-sm focus:outline-red-500"
+                                        className={`w-full rounded-lg px-4 py-3 text-sm ${errors.displayName ? 'border border-red-500 focus:outline-red-500'
+                                            : 'border border-gray-400 focus:outline-blue-500'
+                                            }`}
                                     />
                                     <div className="text-right text-xs text-gray-500">
                                         {/* you can show dynamic char count here */}

@@ -1,46 +1,118 @@
 import React, { useEffect, useRef, useState } from 'react';
-import CreditCardIcon from '@mui/icons-material/CreditCard';   // instead of FaCcVisa
-import PaymentIcon from '@mui/icons-material/Payment';      // instead of FaCcMastercard / FaCcAmex / FaCcDiscover
-import LockIcon from '@mui/icons-material/Lock';         // instead of FaLock
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import PaymentIcon from '@mui/icons-material/Payment';
+import LockIcon from '@mui/icons-material/Lock';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import DoneIcon from '@mui/icons-material/Done';
-import figmathumbnail from '../assets/figmathumbnail.jpg'
+import figmathumbnail from '../assets/figmathumbnail.jpg';
+
+// 1. Yup validation schema
+const paymentSchema = yup.object().shape({
+    cardNumber: yup
+        .string()
+        .required('Card number zaroori hai')
+        .matches(/^\d{16}$/, '16-digit number dalain'),
+    expiry: yup
+        .string()
+        .required('Expiry date zaroori hai')
+        .matches(/^(0[1-9]|1[0-2]) \/ ([0-9]{2})$/, 'Format 05 / 25 hona chahiye'),
+    securityCode: yup
+        .string()
+        .required('Security code zaroori hai')
+        .matches(/^\d{3}$/, '3-digit code hona chahiye'),
+    cardholderName: yup
+        .string()
+        .min(3, "Name must be at least 3 characters")
+        .required("Cardholder's name zaroori hai"),
+    displayName: yup
+        .string()
+        .max(30, 'Max 30 characters'),
+    saveCard: yup.boolean(),
+});
 
 const Payment = () => {
+    // 2. React Hook Form init
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm({
+        resolver: yupResolver(paymentSchema),
+    });
+
+    // accordion refs & state
     const [method, setMethod] = useState('card');
     const cardRef = useRef(null);
     const paypalRef = useRef(null);
     const [cardHeight, setCardHeight] = useState('0px');
     const [paypalHeight, setPaypalHeight] = useState('0px');
 
+    // useEffect(() => {
+    //     if (method === 'card') {
+    //         setCardHeight(`${cardRef.current.scrollHeight}px`);
+    //     } else {
+    //         setCardHeight('0px');
+    //     }
+    // }, [
+    //     method,
+    //     // Jab bhi errors change hon, dobara height nikaal lo
+    //     Object.keys(errors).length
+    // ]);
+
     useEffect(() => {
-        setCardHeight(method === 'card' ? `${cardRef.current.scrollHeight}px` : '0px');
-        setPaypalHeight(method === 'paypal' ? `${paypalRef.current.scrollHeight}px` : '0px');
-    }, [method]);
+        // card panel
+        setCardHeight(
+            method === 'card'
+                ? `${cardRef.current.scrollHeight}px`
+                : '0px'
+        );
+        // paypal panel
+        setPaypalHeight(
+            method === 'paypal'
+                ? `${paypalRef.current.scrollHeight}px`
+                : '0px'
+        );
+    }, [method, Object.keys(errors).length]);
+
+    // form submit handler
+    const onSubmit = data => {
+        console.log('Payment data:', data);
+        // API call integration here
+    };
+
+    // PayPal redirect handler
+    const handlePaypal = () => {
+        // redirect logic
+        window.location.href = '/api/paypal';
+    };
 
     return (
         <div className="flex flex-col md:flex-row justify-center gap-10 lg:gap-20 py-4">
+            {/* left section */}
             <div className="flex flex-col gap-5 w-full md:w-3/5 lg:w-2/3">
-                {/* Left Form */}
                 <div className="w-full border border-gray-200">
-                    <div className='bg-gray-50 border-b border-gray-300 px-3 py-2'>
-                        <h2 className="text-start text-lg text-gray-800 font-semibold">Payment Options</h2>
+                    <div className="bg-gray-50 border-b border-gray-300 px-3 py-2">
+                        <h2 className="text-lg font-semibold text-gray-800">Payment Options</h2>
                     </div>
+
                     {/* Card Option */}
                     <div className="border-b border-gray-300 overflow-hidden">
                         <button
                             onClick={() => setMethod('card')}
-                            className="cursor-pointer w-full flex justify-between items-center px-4 py-3 bg-white"
+                            className="w-full flex justify-between items-center px-4 py-3 bg-white cursor-pointer"
                         >
-                            <label className="cursor-pointer flex items-center">
+                            <label className="flex items-center cursor-pointer">
                                 <input
                                     type="radio"
                                     name="payment"
                                     value="card"
                                     checked={method === 'card'}
                                     onChange={() => setMethod('card')}
-                                    className="form-radio text-blue-600 h-5 w-5 cursor-pointer"
+                                    className="form-radio h-5 w-5 text-blue-600"
                                 />
                                 <span className="pl-2 text-lg text-gray-800">Credit & Debit Cards</span>
                             </label>
@@ -51,70 +123,122 @@ const Payment = () => {
                             style={{ maxHeight: cardHeight }}
                             className="bg-gray-100 transition-all duration-300 overflow-hidden"
                         >
-                            <form className="space-y-4 bg-gray-50 p-8">
+                            {/* 3. Form wrapper with id */}
+                            <form
+                                id="paymentForm"
+                                onSubmit={handleSubmit(onSubmit)}
+                                className="bg-gray-50 p-8 space-y-4"
+                            >
                                 {/* Card number */}
                                 <div>
-                                    <label className="text-start text-gray-700 block text-sm font-medium mb-1">
-                                        Card number
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 text-start">Card number</label>
                                     <div className="relative">
                                         <CreditCardIcon className="absolute left-3 top-3 text-gray-400" />
                                         <input
-                                            type="text"
+                                            {...register('cardNumber')}
                                             placeholder="1234 5678 9012 3456"
-                                            className="w-full border border-gray-400 rounded-lg text-sm pl-12 py-3 focus:outline-red-500"
+                                            inputMode="numeric"           // numeric keypad mobile pe
+                                            pattern="[0-9]*"              // validation hint
+                                            onInput={e => {
+                                                // non-digits hata do
+                                                e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '')
+                                            }}
+                                            className={`w-full rounded-lg pl-12 py-3 text-sm ${errors.cardNumber ? 'border-red-500 focus:outline-red-500'
+                                                : 'border border-gray-400 focus:outline-blue-500'
+                                                }`}
                                         />
-                                        <PaymentIcon className="absolute right-3 top-3 text-gray-400" />
+                                        <LockIcon className="absolute right-3 top-3 text-gray-400" />
                                     </div>
+                                    {errors.cardNumber && (
+                                        <p className="mt-1 text-sm text-start text-red-500">{errors.cardNumber.message}</p>
+                                    )}
                                 </div>
-                                {/* Expiration and security code */}
+
+                                {/* Expiry & Security */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-start text-gray-700 block text-sm font-medium mb-1">
-                                            Expiration date
-                                        </label>
+                                        <label className="text-start block text-sm font-medium text-gray-700 mb-1">Expiry date</label>
                                         <input
-                                            type="text"
+                                            {...register('expiry')}
                                             placeholder="MM / YY"
-                                            className="w-full border border-gray-400 rounded-lg text-sm px-4 py-3 focus:outline-red-500"
+                                            inputMode="numeric"
+                                            pattern="\d{2} \/ \d{2}"
+                                            maxLength={7}
+                                            onInput={e => {
+                                                // sirf digits aur slash
+                                                let v = e.currentTarget.value.replace(/[^\d]/g, '')
+                                                if (v.length > 2) v = v.slice(0, 2) + ' / ' + v.slice(2, 4)
+                                                e.currentTarget.value = v
+                                            }}
+                                            className="w-full border border-gray-400 rounded-lg px-4 py-3 text-sm focus:outline-red-500"
                                         />
+                                        {errors.expiry && <p className="text-start mt-1 text-sm text-red-500">{errors.expiry.message}</p>}
                                     </div>
                                     <div>
-                                        <label className="text-start text-gray-700 block text-sm font-medium mb-1">
-                                            Security code <span className="text-gray-700" title="What's this?">?</span>
+                                        <label className="text-start block text-sm font-medium text-gray-700 mb-1">
+                                            Security code <span title="What's this?">?</span>
                                         </label>
                                         <input
-                                            type="text"
+                                            {...register('securityCode')}
                                             placeholder="123"
-                                            className="w-full border border-gray-400 rounded-lg text-sm px-4 py-3 focus:outline-red-500"
+                                            pattern="\d{3}"
+                                            maxLength={3}
+                                            onInput={e => {
+                                                e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '')
+                                            }}
+                                            className="w-full border border-gray-400 rounded-lg px-4 py-3 text-sm focus:outline-red-500"
                                         />
+                                        {errors.securityCode && (
+                                            <p className="text-start mt-1 text-sm text-red-500">{errors.securityCode.message}</p>
+                                        )}
                                     </div>
                                 </div>
-                                {/* Cardholder and display name */}
+
+                                {/* Cardholder */}
                                 <div>
-                                    <label className="text-start text-gray-700 block text-sm font-medium mb-1">
-                                        Cardholder's name
-                                    </label>
+                                    <label className="text-start block text-sm font-medium text-gray-700 mb-1">Cardholder's name</label>
                                     <input
-                                        type="text"
+                                        {...register('cardholderName',)}
                                         placeholder="As written on card"
-                                        className="w-full border border-gray-400 rounded-lg text-sm px-4 py-3 focus:outline-red-500"
+                                        minLength={3}
+                                        className="w-full border border-gray-400 rounded-lg px-4 py-3 text-sm focus:outline-red-500"
                                     />
+                                    {errors.cardholderName && (
+                                        <p className="text-start mt-1 text-sm text-red-500">{errors.cardholderName.message}</p>
+                                    )}
                                 </div>
+
+                                {/* Display name & save */}
                                 <div>
-                                    <label className="text-start text-gray-700 block text-sm font-medium mb-1">
-                                        Card display name <span className="text-gray-700">(Optional)</span>
+                                    <label className="text-start block text-sm font-medium text-gray-700 mb-1">
+                                        Card display name <span>(Optional)</span>
                                     </label>
                                     <input
-                                        type="text"
-                                        placeholder="e.g. Marketing card, Legal team card…"
-                                        className="w-full border border-gray-400 rounded-lg text-sm px-4 py-3 focus:outline-red-500"
-                                        maxLength={30}
+                                        {...register('displayName')}
+                                        placeholder="e.g. Marketing card…"
+                                        inputMode="text"
+                                        pattern="[A-Za-z\s]+"
+                                        minLength={3}
+                                        onInput={e => {
+                                            // sirf letters aur spaces
+                                            e.currentTarget.value = e.currentTarget.value.replace(/[^A-Za-z\s]/g, '')
+                                        }}
+                                        className="w-full border border-gray-400 rounded-lg px-4 py-3 text-sm focus:outline-red-500"
                                     />
-                                    <div className="text-right text-xs text-gray-500">0/30</div>
+                                    <div className="text-right text-xs text-gray-500">
+                                        {/* you can show dynamic char count here */}
+                                    </div>
+                                    {errors.displayName && (
+                                        <p className="text-start mt-1 text-sm text-red-500">{errors.displayName.message}</p>
+                                    )}
                                 </div>
+
                                 <div className="flex items-center">
-                                    <input type="checkbox" className="form-checkbox text-blue-600 h-4 w-4" />
+                                    <input
+                                        type="checkbox"
+                                        {...register('saveCard')}
+                                        className="form-checkbox h-4 w-4 text-blue-600"
+                                    />
                                     <label className="ml-2 text-sm">Save this card for future payments</label>
                                 </div>
                             </form>
@@ -122,32 +246,30 @@ const Payment = () => {
                     </div>
 
                     {/* PayPal Option */}
-                    <div className="border-b border-gray-300 overflow-hidden">
+                    <div className="border-b border-gray-300">
                         <button
                             onClick={() => setMethod('paypal')}
                             className="w-full flex justify-between items-center px-4 py-3 bg-white cursor-pointer"
                         >
-                            <label className="flex items-center">
+                            <label className="flex items-center cursor-pointer">
                                 <input
                                     type="radio"
                                     name="payment"
                                     value="paypal"
                                     checked={method === 'paypal'}
                                     onChange={() => setMethod('paypal')}
-                                    className="form-radio text-blue-600 h-5 w-5 cursor-pointer"
+                                    className="form-radio h-5 w-5 text-blue-600"
                                 />
-                                <span className="pl-2 text-lg text-gray-800 cursor-pointer">PayPal</span>
+                                <span className="pl-2 text-lg text-gray-800">PayPal</span>
                             </label>
                             {method === 'paypal' ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                         </button>
                         <div
                             ref={paypalRef}
                             style={{ maxHeight: paypalHeight }}
-                            className="bg-gray-50 transition-all duration-300 overflow-hidden"
+                            className="transition-all duration-300 bg-gray-50 text-gray-700"
                         >
-                            <div className="p-4 text-base text-gray-700">
-                                Redirect to PayPal for payment.
-                            </div>
+                            <div className='text-lg py-4'> Redirect to PayPal for payment.</div>
                         </div>
                     </div>
                 </div>
@@ -168,6 +290,7 @@ const Payment = () => {
                         </div>
                     </div>
                 </div>
+
             </div>
 
             {/* right summary */}
@@ -206,12 +329,29 @@ const Payment = () => {
                     </div>
                     <p className="text-xs text-gray-800 text-start pt-2">Total delivery time 4 days</p>
                     <p className='text-xs text-start text-gray-800 py-3'>By clicking the button, you agree to Fiverr's <span className='underline'>Terms of Service</span> and <span className='underline'>Payment Terms</span></p>
-                    <button className="w-full py-2 bg-black text-white font-medium rounded hover:opacity-90 mb-2 text-base">Confirm & Pay</button>
+
+                    {method === 'card' ? (
+                        <button
+                            type="submit"
+                            form="paymentForm"
+                            className="w-full py-2 bg-black text-white rounded hover:opacity-90 text-base mb-2"
+                        >
+                            Confirm & Pay
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handlePaypal}
+                            className="w-full py-2 bg-black text-white rounded hover:opacity-90 text-base mb-2"
+                        >
+                            Pay with PayPal
+                        </button>
+                    )}
                     <div className="flex items-center justify-center text-sm font-medium text-gray-800">
                         <LockIcon className="mr-1" fontSize="small" /> SSL Secure Payment
                     </div>
                     <p className="px-5 pt-2 pb-4 text-xs text-start text-gray-800 mt-2 border-gray-200">You will be charged PKR 4,186.07. Total amount includes currency conversion fees.</p>
                 </div>
+
             </div>
         </div>
     );

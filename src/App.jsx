@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import PMForm from './pages/PMForm';
 import Dashboard from './pages/Dashboard';
 import Payment from './pages/Payment';
+import ReduxToolkit from './pages/ReduxToolkit';
 
 const App = () => {
   return (
@@ -13,10 +14,11 @@ const App = () => {
           <Route path="/pmform" element={<PMForm />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/payment" element={<Payment />} />
-
           {/* Route for OrderPage */}
           {/* <Route path="/order" element={<OrderPage />} /> */}
 
+          {/* Route for redux toolkit learning */}
+          <Route path="/redux" element={<ReduxToolkit />} />
         </Routes>
       </div>
     </Router>
